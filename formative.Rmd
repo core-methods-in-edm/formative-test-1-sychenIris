@@ -1,0 +1,97 @@
+---
+title: "Formative Test 1"
+author: "Shih-Yin Chen"
+date: "October 5, 2017"
+output: html_document
+---
+## Instructions
+
+Please follow the directions below and submit your answers by 5pm EST, Thursday 5th of October
+
+1. Download the [MITx/Harvardx MOOC dataset](https://dataverse.harvard.edu/file.xhtml?fileId=2468954&version=RELEASED&version=.0).
+
+2. Fork and clone this repository to your computer and open it as a new project in RStudio
+
+3. Open a new R Markdown file and save it to the repository with the filename `formative.rmd`. Inlcude all your code in the markdown document.
+
+4. Upload the MITx/Harvardx dataset to R as a dataframe named `D1`(Please inlcude your code in your markdown document)
+```{r}
+DF1 = read.csv("MITx_HarvardxMOOC.csv")
+```
+
+5. What does the `DI` suffix that is appeneded to two of the variable names mean?
+
+* userid_DI represents user ID.
+* final_cc_cname_DI represents country name.
+
+
+6. How many people enrolled in HarvardX/CS50x recieved certification in 2012? (Please inlcude your code in your markdown document)
+```{r}
+library(dplyr)
+DF1$last_event_DI <- as.Date(DF1$last_event_DI, format= "%Y-%m-%d")
+str(DF1)
+DF1_sub <- subset(DF1, last_event_DI> "2012-01-01" & last_event_DI < "2012-12-31")
+DF1_sub$certified <- as.numeric(as.character(DF1_sub$certified))
+sum(DF1_sub$certified)
+```
+Firstly, I subset the dataset in which the last event equals to 2012 to get the samples only in 2012. And then I count the number of recieved certifications by summary the "certified" column. As result, there were 17687 people recieved certifications.
+
+
+7. How many people registered for HarvardX/CS50x from Columbia on October 15, 2012? (Please inlcude your code in your markdown document)
+```{r}
+DF1 %>% filter(start_time_DI == "2012-10-15") %>%
+  summarize(count = n())
+```
+Another to count the number of people registered in the course is to use dplyr package (filter function). As we can see, there are 6766 people enrolled in for the course on October 15, 2012.
+
+
+8. Create a new data frame (`D2`) that includes student ID and registration date for all students from a country of your choice (Please inlcude your code in your markdown document)
+```{r}
+D2 <- DF1 %>% select(start_time_DI, userid_DI, final_cc_cname_DI) %>%
+  filter(final_cc_cname_DI == "United States")
+```
+
+
+9. Create a new data frame (`D3`) in which the column names are the registration dates, with one column containing the student ids and all other cells indicating a `1` if the student registered on that date or an `NA` if they did not (hint: you will need to create a new variable before you change the structure of your data frame)
+```{r}
+D3 <- D2 %>% 
+  rename(registration_dates = start_time_DI, student_ids = userid_DI, country = final_cc_cname_DI) %>% 
+  mutate(registration_onOct15 = registration_dates)
+  
+D3$registration_onOct15 <- if_else(D3$registration_onOct15 == "2012-10-15", 1, 0)
+```
+
+
+10. Now make the row names of `D3` the student ids on your new data frame and remove the user id column from your data frame
+(I named the dataset as D33)
+```{r}
+D33 <- select(D3, registration_onOct15)
+```
+
+11. Convert your data frame to a matrix (`M1`)
+```{r}
+class(D33)
+M1 <- matrix(D33)
+class(M1)
+str(M1)
+```
+
+12. Create a new matrix which is the transposed version of your matrix (`M2`)
+```{r}
+M2 <- t(D33)
+class(M2)
+str(M2)
+```
+
+13. Create a third matrix (`M3`) that is a student by student matrix where the cells in the matrix represent if two studentes registered on the same day (This will take a lot of processing power, you may not be able to complete it if you have a large number of students)
+```{r}
+#multiplication of M1 and M2
+M3 <- M1 %*% M2
+```
+
+14. Convert the diagonal of your matrix into `NA`s
+```{r}
+diag(M3) <- NA
+M3
+```
+
